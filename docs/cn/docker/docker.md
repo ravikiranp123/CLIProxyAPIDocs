@@ -1,0 +1,50 @@
+# 使用 Docker 运行
+
+运行以下命令进行登录（Gemini OAuth，端口 8085）：
+
+```bash
+docker run --rm -p 8085:8085 -v /path/to/your/config.yaml:/CLIProxyAPI/config.yaml -v /path/to/your/auth-dir:/root/.cli-proxy-api eceasy/cli-proxy-api:latest /CLIProxyAPI/CLIProxyAPI --login
+```
+
+运行以下命令进行登录（OpenAI OAuth，端口 1455）：
+
+```bash
+docker run --rm -p 1455:1455 -v /path/to/your/config.yaml:/CLIProxyAPI/config.yaml -v /path/to/your/auth-dir:/root/.cli-proxy-api eceasy/cli-proxy-api:latest /CLIProxyAPI/CLIProxyAPI --codex-login
+```
+
+运行以下命令进行登录（Claude OAuth，端口 54545）：
+
+```bash
+docker run --rm -p 54545:54545 -v /path/to/your/config.yaml:/CLIProxyAPI/config.yaml -v /path/to/your/auth-dir:/root/.cli-proxy-api eceasy/cli-proxy-api:latest /CLIProxyAPI/CLIProxyAPI --claude-login
+```
+
+运行以下命令进行登录（Qwen OAuth）：
+
+```bash
+docker run -it -rm -v /path/to/your/config.yaml:/CLIProxyAPI/config.yaml -v /path/to/your/auth-dir:/root/.cli-proxy-api eceasy/cli-proxy-api:latest /CLIProxyAPI/CLIProxyAPI --qwen-login
+```
+
+运行以下命令进行登录（iFlow OAuth，端口 11451）：
+
+```bash
+docker run --rm -p 11451:11451 -v /path/to/your/config.yaml:/CLIProxyAPI/config.yaml -v /path/to/your/auth-dir:/root/.cli-proxy-api eceasy/cli-proxy-api:latest /CLIProxyAPI/CLIProxyAPI --iflow-login
+```
+
+
+运行以下命令启动服务器：
+
+```bash
+docker run --rm -p 8317:8317 -v /path/to/your/config.yaml:/CLIProxyAPI/config.yaml -v /path/to/your/auth-dir:/root/.cli-proxy-api eceasy/cli-proxy-api:latest
+```
+
+> [!NOTE]
+> 要在 Docker 中使用 Git 支持的配置存储，您可以使用 `-e` 标志传递 `GITSTORE_*` 环境变量。例如：
+>
+> ```bash
+> docker run --rm -p 8317:8317 \
+>   -e GITSTORE_GIT_URL="https://github.com/your/config-repo.git" \
+>   -e GITSTORE_GIT_TOKEN="your_personal_access_token" \
+>   -v /path/to/your/git-store:/CLIProxyAPI/remote \
+>   eceasy/cli-proxy-api:latest
+> ```
+> 在这种情况下，您可能不需要直接挂载 `config.yaml` 或 `auth-dir`，因为它们将由容器内的 Git 存储在 `GITSTORE_LOCAL_PATH`（默认为 `/CLIProxyAPI`，在此示例中我们将其设置为 `/CLIProxyAPI/remote`）进行管理。
