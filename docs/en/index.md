@@ -8,10 +8,10 @@ hero:
   actions:
     - theme: brand
       text: What is CLIProxyAPI?
-      link: /en/introduction/what-is-cliproxyapi
+      link: /introduction/what-is-cliproxyapi
     - theme: alt
       text: Quick Start
-      link: /en/introduction/quick-start
+      link: /introduction/quick-start
     - theme: alt
       text: GitHub
       link: https://github.com/router-for-me/CLIProxyAPI
