@@ -17,11 +17,11 @@ hero:
       link: https://github.com/router-for-me/CLIProxyAPI
 
 features:
-  - title: Feature A
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature B
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature C
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+  - title: "所有协议"
+    details: "支持所有协议：Chat Completions / Response / Gemini / Calude"
+  - title: "一个协议"
+    details: "使用一个协议访问所有模型"
+  - title: "快速"
+    details: "快速且轻盈"
 ---
 
