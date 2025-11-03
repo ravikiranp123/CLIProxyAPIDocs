@@ -75,9 +75,25 @@ export default defineConfig({
                     {text: '使用 Docker Compose', link: '/cn/docker/docker-compose'},
                 ]
             },
-
+            {
+                text: '实操配置教程',
+                items: [
+                    {text: '零：配置详细解说', link: '/cn/hands-on/tutorial-0'},
+                    {text: '壹：项目介绍+Qwen实战', link: '/cn/hands-on/tutorial-1'},
+                    {text: '贰：Gemini CLI+Codex实战', link: '/cn/hands-on/tutorial-2'},
+                    {text: '叁：NanoBanana实战', link: '/cn/hands-on/tutorial-3'},
+                    {text: '肆：中转转发接入篇', link: '/cn/hands-on/tutorial-4'},
+                    {text: '伍：Docker服务器部署', link: '/cn/hands-on/tutorial-5'},
+                    {text: '陆：新人最爱GUI', link: '/cn/hands-on/tutorial-6'},
+                    {text: '零成本部署（ClawCloud）', link: '/cn/hands-on/tutorial-7'},
+                    {text: '零成本部署（HuggingFace）', link: '/cn/hands-on/tutorial-8'},
+                    {text: '零成本部署（Railway）', link: '/cn/hands-on/tutorial-9'},
+                    {text: '零成本部署（Render）', link: '/cn/hands-on/tutorial-10'},
+                ]
+            },
+ 
         ],
-
+ 
         socialLinks: [
             {icon: 'github', link: 'https://github.com/router-for-me/CLIProxyAPI'}
         ],
