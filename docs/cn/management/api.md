@@ -566,6 +566,32 @@ outline: 'deep'
       { "status": "ok" }
       ```
 
+### WebSocket 鉴权（`ws-auth`）
+- GET `/ws-auth` — 查看 WebSocket 网关是否启用鉴权
+    - 请求：
+      ```bash
+      curl -H 'Authorization: Bearer <MANAGEMENT_KEY>' http://localhost:8317/v0/management/ws-auth
+      ```
+    - 响应：
+      ```json
+      { "ws-auth": true }
+      ```
+- PUT/PATCH `/ws-auth` — 切换 `/ws/*` 路由是否强制鉴权
+    - 请求：
+      ```bash
+      curl -X PATCH -H 'Content-Type: application/json' \
+      -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        -d '{"value":false}' \
+        http://localhost:8317/v0/management/ws-auth
+      ```
+    - 响应：
+      ```json
+      { "status": "ok" }
+      ```
+    - 说明：
+        - 当从 `false` 切换为 `true` 时，服务会主动断开所有现有的 WebSocket 连接，确保重连时必须携带有效的 API 凭据。
+        - 关闭鉴权不会影响已建立的连接，但新的连接会跳过鉴权流程，直到再次开启。
+
 ### Claude API KEY（对象数组）
 - GET `/claude-api-key` — 列出全部
     - 请求：
@@ -780,6 +806,33 @@ outline: 'deep'
       ```
     - 说明：
         - 仅统计并删除磁盘文件，成功后同样会对被移除的凭据执行禁用；对纯内存条目无影响。
+
+### Vertex 凭据导入
+等同 CLI `vertex-import`，用于上传 Google 服务账号 JSON，并在 `auth-dir` 下生成 `vertex-<project>.json`。
+
+- POST `/vertex/import` — 上传 Vertex 服务账号密钥
+    - 请求（multipart）：
+      ```bash
+      curl -X POST \
+        -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        -F 'file=@/path/to/my-project-sa.json' \
+        -F 'location=us-central1' \
+        http://localhost:8317/v0/management/vertex/import
+      ```
+    - 响应：
+      ```json
+      {
+        "status": "ok",
+        "auth-file": "/abs/path/auths/vertex-my-project.json",
+        "project_id": "my-project",
+        "email": "svc@my-project.iam.gserviceaccount.com",
+        "location": "us-central1"
+      }
+      ```
+    - 说明：
+        - 必须使用 `multipart/form-data` 并通过 `file` 字段上传完整的服务账号 JSON。若 JSON 无效或缺少 `project_id`/`private_key` 会返回 `400`。
+        - `location` 表单（或查询）字段可选，未提供时保存为 `us-central1`，后续可在生成的文件中手动调整。
+        - 服务会自动规范化 `private_key`，写入 `vertex` 标签并通过 token store 持久化；若持久化失败，将以 `500` 返回 `{ "error": "save_failed", ... }`。
 
 ### 登录/授权 URL
 

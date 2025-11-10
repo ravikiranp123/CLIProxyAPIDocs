@@ -566,6 +566,32 @@ These endpoints update the inline `config-api-key` provider inside the `auth.pro
       { "status": "ok" }
       ```
 
+### WebSocket Authentication (`ws-auth`)
+- GET `/ws-auth` — Check whether the WebSocket gateway enforces authentication
+    - Request:
+      ```bash
+      curl -H 'Authorization: Bearer <MANAGEMENT_KEY>' http://localhost:8317/v0/management/ws-auth
+      ```
+    - Response:
+      ```json
+      { "ws-auth": true }
+      ```
+- PUT/PATCH `/ws-auth` — Enable or disable authentication for `/ws/*` endpoints
+    - Request:
+      ```bash
+      curl -X PATCH -H 'Content-Type: application/json' \
+      -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        -d '{"value":false}' \
+        http://localhost:8317/v0/management/ws-auth
+      ```
+    - Response:
+      ```json
+      { "status": "ok" }
+      ```
+    - Notes:
+        - When toggled from `false` → `true`, the server terminates any existing WebSocket sessions so that reconnections must supply valid API credentials.
+        - Disabling authentication leaves current sessions untouched but future connections will skip the auth middleware until re-enabled.
+
 ### Claude API KEY (object array)
 - GET `/claude-api-key` — List all
     - Request:
@@ -780,6 +806,33 @@ Manage JSON token files under `auth-dir`: list, download, upload, delete.
       ```
     - Notes:
         - Only files on disk are counted and removed; each successful deletion also triggers a disable call into the runtime auth manager. Purely in-memory entries stay untouched.
+
+### Vertex Credential Import
+Mirrors the CLI `vertex-import` helper and stores Google service account JSON as `vertex-<project>.json` files inside `auth-dir`.
+
+- POST `/vertex/import` — Upload a Vertex service account key
+    - Request (multipart):
+      ```bash
+      curl -X POST \
+        -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        -F 'file=@/path/to/my-project-sa.json' \
+        -F 'location=us-central1' \
+        http://localhost:8317/v0/management/vertex/import
+      ```
+    - Response:
+      ```json
+      {
+        "status": "ok",
+        "auth-file": "/abs/path/auths/vertex-my-project.json",
+        "project_id": "my-project",
+        "email": "svc@my-project.iam.gserviceaccount.com",
+        "location": "us-central1"
+      }
+      ```
+    - Notes:
+        - Uploads must be sent as `multipart/form-data` using the `file` field. The payload is validated and `private_key` is normalized; malformed JSON or missing `project_id` yields `400`.
+        - The optional `location` form (or query) field overrides the default `us-central1` region recorded in the credential metadata.
+        - The handler persists the credential via the same token store as other auth uploads; failures return `500` with `{ "error": "save_failed", ... }`.
 
 ### Login/OAuth URLs
 
