@@ -94,4 +94,18 @@ openai-compatibility:
     models: # 提供商支持的模型。或者你可以使用类似 openrouter://moonshotai/kimi-k2:free 这样的格式来请求未在这里定义的模型
       - name: "moonshotai/kimi-k2:free" # 实际的模型名称。
         alias: "kimi-k2" # 在API中使用的别名。
+
+payload: # 可选的 payload 配置
+  default: # 默认规则：仅在 payload 中对应字段缺失时才写入。
+    - models:
+        - name: "gemini-2.5-pro" # 支持通配符（例如 "gemini-*"）
+          protocol: "gemini" # 限定匹配到指定协议，可选：openai、gemini、claude、codex
+      params: # JSON 路径（gjson/sjson 语法）到值的映射
+        "generationConfig.thinkingConfig.thinkingBudget": 32768
+  override: # 覆盖规则：总是写入字段并覆盖已有值。
+    - models:
+        - name: "gpt-*" # 支持通配符（例如 "gpt-*"）
+          protocol: "codex" # 限定匹配到指定协议，可选：openai、gemini、claude、codex
+      params: # JSON 路径（gjson/sjson 语法）到值的映射
+        "reasoning.effort": "high"
 ```
