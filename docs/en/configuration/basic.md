@@ -62,69 +62,64 @@ quota-exceeded:
 ws-auth: false
 
 # Gemini API keys (preferred)
-#gemini-api-key:
-#  - api-key: "AIzaSy...01"
-#    base-url: "https://generativelanguage.googleapis.com"
-#    headers:
-#      X-Custom-Header: "custom-value"
-#    proxy-url: "socks5://proxy.example.com:1080"
-#  - api-key: "AIzaSy...02"
-
-# API keys for official Generative Language API (legacy compatibility)
-#generative-language-api-key:
-#  - "AIzaSy...01"
-#  - "AIzaSy...02"
+gemini-api-key:
+  - api-key: "AIzaSy...01"
+    base-url: "https://generativelanguage.googleapis.com"
+    headers:
+      X-Custom-Header: "custom-value"
+    proxy-url: "socks5://proxy.example.com:1080"
+  - api-key: "AIzaSy...02"
 
 # Codex API keys
-#codex-api-key:
-#  - api-key: "sk-atSM..."
-#    base-url: "https://www.example.com" # use the custom codex API endpoint
-#    headers:
-#      X-Custom-Header: "custom-value"
-#    proxy-url: "socks5://proxy.example.com:1080" # optional: per-key proxy override
+codex-api-key:
+  - api-key: "sk-atSM..."
+    base-url: "https://www.example.com" # use the custom codex API endpoint
+    headers:
+      X-Custom-Header: "custom-value"
+    proxy-url: "socks5://proxy.example.com:1080" # optional: per-key proxy override
 
 # Claude API keys
-#claude-api-key:
-#  - api-key: "sk-atSM..." # use the official claude API key, no need to set the base url
-#  - api-key: "sk-atSM..."
-#    base-url: "https://www.example.com" # use the custom claude API endpoint
-#    headers:
-#      X-Custom-Header: "custom-value"
-#    proxy-url: "socks5://proxy.example.com:1080" # optional: per-key proxy override
-#    models:
-#      - name: "claude-3-5-sonnet-20241022" # upstream model name
+claude-api-key:
+  - api-key: "sk-atSM..." # use the official claude API key, no need to set the base url
+  - api-key: "sk-atSM..."
+    base-url: "https://www.example.com" # use the custom claude API endpoint
+    headers:
+      X-Custom-Header: "custom-value"
+    proxy-url: "socks5://proxy.example.com:1080" # optional: per-key proxy override
+    models:
+      - name: "claude-3-5-sonnet-20241022" # upstream model name
 #        alias: "claude-sonnet-latest" # client alias mapped to the upstream model
 
 # OpenAI compatibility providers
-#openai-compatibility:
-#  - name: "openrouter" # The name of the provider; it will be used in the user agent and other places.
-#    base-url: "https://openrouter.ai/api/v1" # The base URL of the provider.
-#    headers:
-#      X-Custom-Header: "custom-value"
-#    # New format with per-key proxy support (recommended):
-#    api-key-entries:
-#      - api-key: "sk-or-v1-...b780"
-#        proxy-url: "socks5://proxy.example.com:1080" # optional: per-key proxy override
-#      - api-key: "sk-or-v1-...b781" # without proxy-url
-#    # Legacy format (still supported, but cannot specify proxy per key):
-#    # api-keys:
-#    #   - "sk-or-v1-...b780"
-#    #   - "sk-or-v1-...b781"
-#    models: # The models supported by the provider.
-#      - name: "moonshotai/kimi-k2:free" # The actual model name.
-#        alias: "kimi-k2" # The alias used in the API.
+openai-compatibility:
+  - name: "openrouter" # The name of the provider; it will be used in the user agent and other places.
+    base-url: "https://openrouter.ai/api/v1" # The base URL of the provider.
+    headers:
+      X-Custom-Header: "custom-value"
+    # New format with per-key proxy support (recommended):
+    api-key-entries:
+      - api-key: "sk-or-v1-...b780"
+        proxy-url: "socks5://proxy.example.com:1080" # optional: per-key proxy override
+      - api-key: "sk-or-v1-...b781" # without proxy-url
+    # Legacy format (still supported, but cannot specify proxy per key):
+    # api-keys:
+    #   - "sk-or-v1-...b780"
+    #   - "sk-or-v1-...b781"
+    models: # The models supported by the provider.
+      - name: "moonshotai/kimi-k2:free" # The actual model name.
+        alias: "kimi-k2" # The alias used in the API.
 
-#payload: # Optional payload configuration
-#  default: # Default rules only set parameters when they are missing in the payload.
-#    - models:
-#        - name: "gemini-2.5-pro" # Supports wildcards (e.g., "gemini-*")
-#          protocol: "gemini" # restricts the rule to a specific protocol, options: openai, gemini, claude, codex
-#      params: # JSON path (gjson/sjson syntax) -> value
-#        "generationConfig.thinkingConfig.thinkingBudget": 32768
-#  override: # Override rules always set parameters, overwriting any existing values.
-#    - models:
-#        - name: "gpt-*" # Supports wildcards (e.g., "gpt-*")
-#          protocol: "codex" # restricts the rule to a specific protocol, options: openai, gemini, claude, codex
-#      params: # JSON path (gjson/sjson syntax) -> value
-#        "reasoning.effort": "high"
+payload: # Optional payload configuration
+  default: # Default rules only set parameters when they are missing in the payload.
+    - models:
+        - name: "gemini-2.5-pro" # Supports wildcards (e.g., "gemini-*")
+          protocol: "gemini" # restricts the rule to a specific protocol, options: openai, gemini, claude, codex
+      params: # JSON path (gjson/sjson syntax) -> value
+        "generationConfig.thinkingConfig.thinkingBudget": 32768
+  override: # Override rules always set parameters, overwriting any existing values.
+    - models:
+        - name: "gpt-*" # Supports wildcards (e.g., "gpt-*")
+          protocol: "codex" # restricts the rule to a specific protocol, options: openai, gemini, claude, codex
+      params: # JSON path (gjson/sjson syntax) -> value
+        "reasoning.effort": "high"
 ```

@@ -50,11 +50,13 @@ proxy-url: ""
 # 请求重试次数。如果HTTP响应码为403、408、500、502、503或504，将会触发重试。
 request-retry: 3
 
-
 # 配额超限行为
 quota-exceeded:
    switch-project: true # 当配额超限时是否自动切换到另一个项目
    switch-preview-model: true # 当配额超限时是否自动切换到预览模型
+
+# 如果设置为true，则为 WebSocket API（/v1/ws）启用身份验证。
+ws-auth: false
 
 # Gemini API 密钥
 gemini-api-key:
