@@ -1,16 +1,10 @@
+---
+outline: 'deep'
+---
+
 # Amp CLI
 
 This guide explains how to use CLIProxyAPI with Amp CLI and Amp IDE extensions, enabling you to use your existing Google/ChatGPT/Claude subscriptions (via OAuth) with Amp's CLI.
-
-## Table of Contents
-
-- [Overview](#overview)
-  - [Which Providers Should You Authenticate?](#which-providers-should-you-authenticate)
-- [Architecture](#architecture)
-- [Configuration](#configuration)
-- [Setup](#setup)
-- [Usage](#usage)
-- [Troubleshooting](#troubleshooting)
 
 ## Overview
 
