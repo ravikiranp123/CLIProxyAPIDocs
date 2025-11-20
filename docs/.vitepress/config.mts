@@ -69,7 +69,8 @@ export default defineConfig({
                     {text: 'Claude Code', link: '/agent-client/claude-code'},
                     {text: 'Codex', link: '/agent-client/codex'},
                     {text: 'Gemini CLI', link: '/agent-client/gemini-cli'},
-                    {text: 'Factory Droid', link: '/agent-client/droid'}
+                    {text: 'Factory Droid', link: '/agent-client/droid'},
+                    {text: 'Amp CLI', link: '/agent-client/amp-cli'}
                 ]
             },
             {
