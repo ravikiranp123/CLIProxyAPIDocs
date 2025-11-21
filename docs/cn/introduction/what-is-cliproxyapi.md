@@ -11,10 +11,12 @@ outline: deep
 ## 功能特性
 
 - 为 CLI 模型提供 OpenAI/Gemini/Claude/Codex 兼容的 API 端点
-- 新增 OpenAI Codex（GPT 系列）支持（OAuth 登录）
-- 新增 Claude Code 支持（OAuth 登录）
-- 新增 Qwen Code 支持（OAuth 登录）
-- 新增 iFlow 支持（OAuth 登录）
+- Gemini CLI 支持（OAuth 登录）
+- 反重力 支持（OAuth 登录）
+- OpenAI Codex（GPT 系列）支持（OAuth 登录）
+- Claude Code 支持（OAuth 登录）
+- Qwen Code 支持（OAuth 登录）
+- iFlow 支持（OAuth 登录）
 - 支持流式与非流式响应
 - 函数调用/工具支持
 - 多模态输入（文本、图片）
@@ -23,6 +25,7 @@ outline: deep
 - 支持 Gemini AIStudio API 密钥
 - 支持 AI Studio Build 多账户轮询
 - 支持 Gemini CLI 多账户轮询
+- 支持 反重力 多账户轮询
 - 支持 Claude Code 多账户轮询
 - 支持 Qwen Code 多账户轮询
 - 支持 iFlow 多账户轮询
@@ -31,6 +34,8 @@ outline: deep
 
 ## 支持的模型
 
+- gemini-3-pro-preview
+- gemini-3-pro-image-preview
 - gemini-2.5-pro
 - gemini-2.5-flash
 - gemini-2.5-flash-lite
