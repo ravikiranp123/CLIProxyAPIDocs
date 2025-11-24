@@ -30,6 +30,12 @@ docker run -it -rm -v /path/to/your/config.yaml:/CLIProxyAPI/config.yaml -v /pat
 docker run --rm -p 11451:11451 -v /path/to/your/config.yaml:/CLIProxyAPI/config.yaml -v /path/to/your/auth-dir:/root/.cli-proxy-api eceasy/cli-proxy-api:latest /CLIProxyAPI/CLIProxyAPI --iflow-login
 ```
 
+运行以下命令进行登录（Antigravity OAuth，端口 51121）：
+
+```bash
+docker run --rm -p 51121:51121 -v /path/to/your/config.yaml:/CLIProxyAPI/config.yaml -v /path/to/your/auth-dir:/root/.cli-proxy-api eceasy/cli-proxy-api:latest /CLIProxyAPI/CLIProxyAPI --antigravity-login
+```
+
 
 运行以下命令启动服务器：
 

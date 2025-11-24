@@ -30,6 +30,12 @@ Run the following command to login (iFlow OAuth on port 11451):
 docker run --rm -p 11451:11451 -v /path/to/your/config.yaml:/CLIProxyAPI/config.yaml -v /path/to/your/auth-dir:/root/.cli-proxy-api eceasy/cli-proxy-api:latest /CLIProxyAPI/CLIProxyAPI --iflow-login
 ```
 
+Run the following command to login (Antigravity OAuth on port 51121):
+
+```bash
+docker run --rm -p 51121:51121 -v /path/to/your/config.yaml:/CLIProxyAPI/config.yaml -v /path/to/your/auth-dir:/root/.cli-proxy-api eceasy/cli-proxy-api:latest /CLIProxyAPI/CLIProxyAPI --antigravity-login
+```
+
 Run the following command to start the server:
 
 ```bash

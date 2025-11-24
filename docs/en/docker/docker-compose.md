@@ -25,6 +25,7 @@
           - "1455:1455"
           - "54545:54545"
           - "11451:11451"
+          - "51121:51121"
         environment:
           - GITSTORE_GIT_URL=https://github.com/your/config-repo.git
           - GITSTORE_GIT_TOKEN=your_personal_access_token
@@ -74,6 +75,10 @@
     - **iFlow**:
     ```bash
     docker compose exec cli-proxy-api /CLIProxyAPI/CLIProxyAPI -no-browser --iflow-login
+    ```
+    - **Antigravity**:
+    ```bash
+    docker compose exec cli-proxy-api /CLIProxyAPI/CLIProxyAPI -no-browser --antigravity-login
     ```
 
 5.  To view the server logs:
