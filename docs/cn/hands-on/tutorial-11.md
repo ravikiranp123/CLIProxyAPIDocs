@@ -68,10 +68,6 @@ CLIProxyAPI 自 v6.3.x 版本起，开始支持通过 WebSocket 方式接入 AI 
 
 ![](https://img.072899.xyz/2025/11/e0db39f81a3bbb956cbe9364e656a76f.png)
 
-### 其他
-
-当然，如果不想使用 HuggingFace，项目也支持本地部署：https://github.com/hkfires/AIStudioBuildWS/
-
 ### 参考项目
 
 https://github.com/cliouo/aistudio-build-proxy-all

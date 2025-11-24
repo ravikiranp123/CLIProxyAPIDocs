@@ -68,10 +68,6 @@ After a successful deployment, you should see logs similar to the following in `
 
 ![](https://img.072899.xyz/2025/11/e0db39f81a3bbb956cbe9364e656a76f.png)
 
-### Others
-
-Of course, if you don't want to use HuggingFace, the project also supports local deployment: https://github.com/hkfires/AIStudioBuildWS/
-
 ### Reference Project
 
 https://github.com/cliouo/aistudio-build-proxy-all
