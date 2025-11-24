@@ -42,15 +42,3 @@ docker run --rm -p 51121:51121 -v /path/to/your/config.yaml:/CLIProxyAPI/config.
 ```bash
 docker run --rm -p 8317:8317 -v /path/to/your/config.yaml:/CLIProxyAPI/config.yaml -v /path/to/your/auth-dir:/root/.cli-proxy-api eceasy/cli-proxy-api:latest
 ```
-
-> [!NOTE]
-> 要在 Docker 中使用 Git 支持的配置存储，您可以使用 `-e` 标志传递 `GITSTORE_*` 环境变量。例如：
->
-> ```bash
-> docker run --rm -p 8317:8317 \
->   -e GITSTORE_GIT_URL="https://github.com/your/config-repo.git" \
->   -e GITSTORE_GIT_TOKEN="your_personal_access_token" \
->   -v /path/to/your/git-store:/CLIProxyAPI/remote \
->   eceasy/cli-proxy-api:latest
-> ```
-> 在这种情况下，您可能不需要直接挂载 `config.yaml` 或 `auth-dir`，因为它们将由容器内的 Git 存储在 `GITSTORE_LOCAL_PATH`（默认为 `/CLIProxyAPI`，在此示例中我们将其设置为 `/CLIProxyAPI/remote`）进行管理。

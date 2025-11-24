@@ -13,28 +13,6 @@
     ```
     *（Windows 用户请注意：您可以在 CMD 或 PowerShell 中使用 `copy config.example.yaml config.yaml`。）*
 
-    要在 Docker Compose 中使用 Git 支持的配置存储，您可以将 `GITSTORE_*` 环境变量添加到 `docker-compose.yml` 文件中的 `cli-proxy-api` 服务定义下。例如：
-    ```yaml
-    services:
-      cli-proxy-api:
-        image: eceasy/cli-proxy-api:latest
-        container_name: cli-proxy-api
-        ports:
-          - "8317:8317"
-          - "8085:8085"
-          - "1455:1455"
-          - "54545:54545"
-          - "11451:11451"
-          - "51121:51121"
-        environment:
-          - GITSTORE_GIT_URL=https://github.com/your/config-repo.git
-          - GITSTORE_GIT_TOKEN=your_personal_access_token
-        volumes:
-          - ./git-store:/CLIProxyAPI/remote # GITSTORE_LOCAL_PATH
-        restart: unless-stopped
-    ```
-    在使用 Git 存储时，您可能不需要直接挂载 `config.yaml` 或 `auth-dir`。
-
 3.  启动服务：
     -   **适用于大多数用户（推荐）：**
         运行以下命令，使用 Docker Hub 上的预构建镜像启动服务。服务将在后台运行。

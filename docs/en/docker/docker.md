@@ -41,15 +41,3 @@ Run the following command to start the server:
 ```bash
 docker run --rm -p 8317:8317 -v /path/to/your/config.yaml:/CLIProxyAPI/config.yaml -v /path/to/your/auth-dir:/root/.cli-proxy-api eceasy/cli-proxy-api:latest
 ```
-
-> [!NOTE]
-> To use the Git-backed configuration store with Docker, you can pass the `GITSTORE_*` environment variables using the `-e` flag. For example:
->
-> ```bash
-> docker run --rm -p 8317:8317 \
->   -e GITSTORE_GIT_URL="https://github.com/your/config-repo.git" \
->   -e GITSTORE_GIT_TOKEN="your_personal_access_token" \
->   -v /path/to/your/git-store:/CLIProxyAPI/remote \
->   eceasy/cli-proxy-api:latest
-> ```
-> In this case, you may not need to mount `config.yaml` or `auth-dir` directly, as they will be managed by the Git store inside the container at the `GITSTORE_LOCAL_PATH` (which defaults to `/CLIProxyAPI` and we are setting it to `/CLIProxyAPI/remote` in this example).
