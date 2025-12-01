@@ -196,6 +196,34 @@ If a plaintext key is detected in the config at startup, it will be bcrypt‑has
       { "success": true, "message": "Logs cleared successfully", "removed": 3 }
       ```
 
+### Request Error Logs
+- GET `/request-error-logs` — List error request log files when request logging is disabled
+    - Response:
+      ```json
+      {
+        "files": [
+          {
+            "name": "error-2024-05-20.log",
+            "size": 12345,
+            "modified": 1716206400
+          }
+        ]
+      }
+      ```
+    - Notes:
+        - When `request-log` is enabled, this endpoint always returns an empty list.
+        - Files are discovered under the same log directory and must start with `error-` and end with `.log`.
+        - `modified` is the last modification time as a Unix timestamp.
+- GET `/request-error-logs/:name` — Download a specific error request log
+    - Request:
+      ```bash
+      curl -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        -OJ 'http://localhost:8317/v0/management/request-error-logs/error-2024-05-20.log'
+      ```
+    - Notes:
+        - `name` must be a safe filename (no `/` or `\`) and match an existing `error-*.log` entry; otherwise the server returns a validation or not-found error.
+        - The handler performs a safety check to ensure the resolved path stays inside the log directory before streaming the file.
+
 ### Usage Statistics Toggle
 - GET `/usage-statistics-enabled` — Check whether telemetry collection is active
     - Response:
@@ -543,6 +571,30 @@ These endpoints update the inline `config-api-key` provider inside the `auth.pro
       { "status": "ok" }
       ```
 
+### Max Retry Interval
+- GET `/max-retry-interval` — Get the maximum retry interval in seconds
+    - Request:
+      ```bash
+      curl -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        http://localhost:8317/v0/management/max-retry-interval
+      ```
+    - Response:
+      ```json
+      { "max-retry-interval": 30 }
+      ```
+- PUT/PATCH `/max-retry-interval` — Set the maximum retry interval in seconds
+    - Request:
+      ```bash
+      curl -X PATCH -H 'Content-Type: application/json' \
+      -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        -d '{"value":60}' \
+        http://localhost:8317/v0/management/max-retry-interval
+      ```
+    - Response:
+      ```json
+      { "status": "ok" }
+      ```
+
 ### Request Log
 - GET `/request-log` — Get boolean
     - Request:
@@ -709,6 +761,70 @@ These endpoints update the inline `config-api-key` provider inside the `auth.pro
       { "status": "ok" }
       ```
 
+### OAuth Excluded Models
+Configure per-provider model blocks for OAuth-based providers. Keys are provider identifiers, values are string arrays of model names to exclude.
+
+- GET `/oauth-excluded-models` — Get the current map
+    - Request:
+      ```bash
+      curl -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        http://localhost:8317/v0/management/oauth-excluded-models
+      ```
+    - Response:
+      ```json
+      {
+        "oauth-excluded-models": {
+          "openai": ["gpt-4.1-mini"],
+          "iflow": ["deepseek-v3.1", "glm-4.5"]
+        }
+      }
+      ```
+- PUT `/oauth-excluded-models` — Replace the full map
+    - Request:
+      ```bash
+      curl -X PUT -H 'Content-Type: application/json' \
+      -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        -d '{"openai":["gpt-4.1-mini"],"iflow":["deepseek-v3.1","glm-4.5"]}' \
+        http://localhost:8317/v0/management/oauth-excluded-models
+      ```
+    - Response:
+      ```json
+      { "status": "ok" }
+      ```
+    - Notes:
+        - The body can also be wrapped as `{ "items": { ... } }`; in both cases empty/blank model names are trimmed out.
+- PATCH `/oauth-excluded-models` — Upsert or delete a single provider entry
+    - Request (upsert):
+      ```bash
+      curl -X PATCH -H 'Content-Type: application/json' \
+      -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        -d '{"provider":"iflow","models":["deepseek-v3.1","glm-4.5"]}' \
+        http://localhost:8317/v0/management/oauth-excluded-models
+      ```
+    - Request (delete provider by sending empty models):
+      ```bash
+      curl -X PATCH -H 'Content-Type: application/json' \
+      -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        -d '{"provider":"iflow","models":[]}' \
+        http://localhost:8317/v0/management/oauth-excluded-models
+      ```
+    - Response:
+      ```json
+      { "status": "ok" }
+      ```
+    - Notes:
+        - `provider` is normalized to lowercase. Sending an empty `models` list removes that provider; if the provider does not exist, a `404` is returned.
+- DELETE `/oauth-excluded-models` — Delete all models for a provider
+    - Request:
+      ```bash
+      curl -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        -X DELETE 'http://localhost:8317/v0/management/oauth-excluded-models?provider=iflow'
+      ```
+    - Response:
+      ```json
+      { "status": "ok" }
+      ```
+
 ### Auth File Management
 
 Manage JSON token files under `auth-dir`: list, download, upload, delete.
@@ -838,7 +954,7 @@ Mirrors the CLI `vertex-import` helper and stores Google service account JSON as
 
 These endpoints initiate provider login flows and return a URL to open in a browser. Tokens are saved under `auths/` once the flow completes.
 
-For Anthropic, Codex, Gemini CLI, and iFlow you can append `?is_webui=true` to reuse the embedded callback forwarder when launching from the management UI.
+For Anthropic, Codex, Gemini CLI, Antigravity, and iFlow you can append `?is_webui=true` to reuse the embedded callback forwarder when launching from the management UI.
 
 - GET `/anthropic-auth-url` — Start Anthropic (Claude) login
     - Request:
@@ -880,6 +996,19 @@ For Anthropic, Codex, Gemini CLI, and iFlow you can append `?is_webui=true` to r
         - When `project_id` is omitted, the server queries Cloud Resource Manager for accessible projects, picks the first available one, and stores it in the token file (marked with `auto: true`).
         - The flow checks and, if needed, enables `cloudaicompanion.googleapis.com` via the Service Usage API; failures surface through `/get-auth-status` as errors such as `project activation required: ...`.
 
+- GET `/antigravity-auth-url` — Start Antigravity login
+    - Request:
+      ```bash
+      curl -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        http://localhost:8317/v0/management/antigravity-auth-url
+      ```
+    - Response:
+      ```json
+      { "status": "ok", "url": "https://...", "state": "ant-1716206400" }
+      ```
+    - Notes:
+        - Add `?is_webui=true` when triggering from the built-in UI so the server starts a temporary local callback forwarder on port `51121` and reuses the main HTTP port for the final redirect.
+
 - GET `/qwen-auth-url` — Start Qwen login (device flow)
     - Request:
       ```bash
@@ -901,6 +1030,28 @@ For Anthropic, Codex, Gemini CLI, and iFlow you can append `?is_webui=true` to r
       ```json
       { "status": "ok", "url": "https://...", "state": "ifl-1716206400" }
       ```
+
+- POST `/iflow-auth-url` — Authenticate using an existing iFlow cookie
+    - Request body:
+      ```bash
+      curl -X POST -H 'Content-Type: application/json' \
+      -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        -d '{"cookie":"<YOUR_IFLOW_COOKIE>"}' \
+        http://localhost:8317/v0/management/iflow-auth-url
+      ```
+    - Successful response:
+      ```json
+      {
+        "status": "ok",
+        "saved_path": "/abs/path/auths/iflow-user.json",
+        "email": "user@example.com",
+        "expired": "2025-05-20T10:00:00Z",
+        "type": "cookie"
+      }
+      ```
+    - Notes:
+        - The `cookie` field is required and must be non-empty; invalid or malformed cookies return `400` with `{ "status": "error", "error": "..." }`.
+        - On success the server normalizes the cookie, exchanges it for an API token, persists it as an `iflow-*.json` auth file, and returns the saved path and basic metadata.
 
 - GET `/get-auth-status?state=<state>` — Poll OAuth flow status
     - Request:

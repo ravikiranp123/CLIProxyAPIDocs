@@ -196,6 +196,34 @@ outline: 'deep'
       { "success": true, "message": "Logs cleared successfully", "removed": 3 }
       ```
 
+### 请求错误日志
+- GET `/request-error-logs` — 在关闭请求日志时列出错误请求日志文件
+    - 响应：
+      ```json
+      {
+        "files": [
+          {
+            "name": "error-2024-05-20.log",
+            "size": 12345,
+            "modified": 1716206400
+          }
+        ]
+      }
+      ```
+    - 说明：
+        - 当 `request-log` 为 `true` 时，该接口始终返回空列表。
+        - 文件来自同一日志目录，文件名必须以 `error-` 开头并以 `.log` 结尾。
+        - `modified` 为最后修改时间的 Unix 时间戳。
+- GET `/request-error-logs/:name` — 下载指定错误请求日志文件
+    - 请求：
+      ```bash
+      curl -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        -OJ 'http://localhost:8317/v0/management/request-error-logs/error-2024-05-20.log'
+      ```
+    - 说明：
+        - `name` 必须是安全文件名（不能包含 `/` 或 `\`），且必须与现有的 `error-*.log` 条目匹配，否则会返回校验错误或未找到错误。
+        - 处理函数会在发送文件前校验解析后的完整路径，确保其仍位于日志目录之内。
+
 ### Usage 统计开关
 - GET `/usage-statistics-enabled` — 查看是否启用请求统计
     - 响应：
@@ -543,6 +571,30 @@ outline: 'deep'
       { "status": "ok" }
       ```
 
+### 最大重试间隔
+- GET `/max-retry-interval` — 获取最大重试间隔（秒）
+    - 请求：
+      ```bash
+      curl -H 'Authorization: BearER <MANAGEMENT_KEY>' \
+        http://localhost:8317/v0/management/max-retry-interval
+      ```
+    - 响应：
+      ```json
+      { "max-retry-interval": 30 }
+      ```
+- PUT/PATCH `/max-retry-interval` — 设置最大重试间隔（秒）
+    - 请求：
+      ```bash
+      curl -X PATCH -H 'Content-Type: application/json' \
+      -H 'Authorization: BearER <MANAGEMENT_KEY>' \
+        -d '{"value":60}' \
+        http://localhost:8317/v0/management/max-retry-interval
+      ```
+    - 响应：
+      ```json
+      { "status": "ok" }
+      ```
+
 ### 请求日志开关
 - GET `/request-log` — 获取布尔值
     - 请求：
@@ -709,6 +761,70 @@ outline: 'deep'
       { "status": "ok" }
       ```
 
+### OAuth 排除模型
+用于为基于 OAuth 的提供商配置需要排除的模型列表。键为提供商标识字符串，值为字符串数组。
+
+- GET `/oauth-excluded-models` — 获取当前映射
+    - 请求：
+      ```bash
+      curl -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        http://localhost:8317/v0/management/oauth-excluded-models
+      ```
+    - 响应：
+      ```json
+      {
+        "oauth-excluded-models": {
+          "openai": ["gpt-4.1-mini"],
+          "iflow": ["deepseek-v3.1", "glm-4.5"]
+        }
+      }
+      ```
+- PUT `/oauth-excluded-models` — 完整替换整张映射表
+    - 请求：
+      ```bash
+      curl -X PUT -H 'Content-Type: application/json' \
+      -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        -d '{"openai":["gpt-4.1-mini"],"iflow":["deepseek-v3.1","glm-4.5"]}' \
+        http://localhost:8317/v0/management/oauth-excluded-models
+      ```
+    - 响应：
+      ```json
+      { "status": "ok" }
+      ```
+    - 说明：
+        - 请求体也可以为 `{ "items": { ... } }` 形式；无论哪种形式，空白模型名称都会被自动过滤。
+- PATCH `/oauth-excluded-models` — 新增/更新或删除单个提供商条目
+    - 请求（新增或更新）：
+      ```bash
+      curl -X PATCH -H 'Content-Type: application/json' \
+      -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        -d '{"provider":"iflow","models":["deepseek-v3.1","glm-4.5"]}' \
+        http://localhost:8317/v0/management/oauth-excluded-models
+      ```
+    - 请求（通过空数组删除提供商）：
+      ```bash
+      curl -X PATCH -H 'Content-Type: application/json' \
+      -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        -d '{"provider":"iflow","models":[]}' \
+        http://localhost:8317/v0/management/oauth-excluded-models
+      ```
+    - 响应：
+      ```json
+      { "status": "ok" }
+      ```
+    - 说明：
+        - `provider` 会被标准化为小写。若传入空的 `models` 数组，则表示删除该提供商；如提供商不存在，则返回 `404`。
+- DELETE `/oauth-excluded-models` — 删除某个提供商的全部排除模型
+    - 请求：
+      ```bash
+      curl -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        -X DELETE 'http://localhost:8317/v0/management/oauth-excluded-models?provider=iflow'
+      ```
+    - 响应：
+      ```json
+      { "status": "ok" }
+      ```
+
 ### 认证文件管理
 
 管理 `auth-dir` 下的 JSON 令牌文件：列出、下载、上传、删除。
@@ -838,7 +954,7 @@ outline: 'deep'
 
 以下端点用于发起各提供商的登录流程，并返回需要在浏览器中打开的 URL。流程完成后，令牌会保存到 `auths/` 目录。
 
-对于 Anthropic、Codex、Gemini CLI 与 iFlow，可附加 `?is_webui=true` 以便从管理界面复用内置回调转发。
+对于 Anthropic、Codex、Gemini CLI、Antigravity 与 iFlow，可附加 `?is_webui=true` 以便从管理界面复用内置回调转发。
 
 - GET `/anthropic-auth-url` — 开始 Anthropic（Claude）登录
     - 请求：
@@ -880,6 +996,19 @@ outline: 'deep'
         - 若未提供 `project_id`，服务会通过 Cloud Resource Manager API 枚举可访问的项目并自动选择首个可用项目，写入的 token 会包含该项目 ID 以及 `auto: true` 标记。
         - 登录过程中会检测 `cloudaicompanion.googleapis.com` 是否已启用，若未启用则调用 Service Usage API 尝试开启；若开启失败，`/get-auth-status` 会返回 `project activation required: ...` 之类的错误提示。
 
+- GET `/antigravity-auth-url` — 开始 Antigravity 登录
+    - 请求：
+      ```bash
+      curl -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        http://localhost:8317/v0/management/antigravity-auth-url
+      ```
+    - 响应：
+      ```json
+      { "status": "ok", "url": "https://...", "state": "ant-1716206400" }
+      ```
+    - 说明：
+        - 若从 Web UI 触发，可添加 `?is_webui=true`，服务会在本地 `51121` 端口启动临时回调转发器，并复用主 HTTP 端口接收最终重定向。
+
 - GET `/qwen-auth-url` — 开始 Qwen 登录（设备授权流程）
     - 请求：
       ```bash
@@ -901,6 +1030,28 @@ outline: 'deep'
       ```json
       { "status": "ok", "url": "https://...", "state": "ifl-1716206400" }
       ```
+
+- POST `/iflow-auth-url` — 使用已有 iFlow Cookie 登录
+    - 请求体：
+      ```bash
+      curl -X POST -H 'Content-Type: application/json' \
+      -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        -d '{"cookie":"<YOUR_IFLOW_COOKIE>"}' \
+        http://localhost:8317/v0/management/iflow-auth-url
+      ```
+    - 成功响应：
+      ```json
+      {
+        "status": "ok",
+        "saved_path": "/abs/path/auths/iflow-user.json",
+        "email": "user@example.com",
+        "expired": "2025-05-20T10:00:00Z",
+        "type": "cookie"
+      }
+      ```
+    - 说明：
+        - `cookie` 字段必填且不能为空，若缺失或格式不合法，会以 `400` 返回 `{ "status": "error", "error": "..." }`。
+        - 成功后服务会规范化 Cookie，换取 API token，将其保存为 `iflow-*.json` 认证文件，并返回保存路径与基础元信息。
 
 - GET `/get-auth-status?state=<state>` — 轮询 OAuth 流程状态
     - 请求：
