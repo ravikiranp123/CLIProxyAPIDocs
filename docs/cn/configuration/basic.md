@@ -84,15 +84,12 @@ claude-api-key:
 openai-compatibility:
   - name: "openrouter" # 提供商的名称；它将被用于用户代理和其它地方。
     base-url: "https://openrouter.ai/api/v1" # 提供商的基础URL。
-    # 新格式：支持每密钥代理配置(推荐):
+    # 持久化格式：支持每密钥代理配置
     api-key-entries:
       - api-key: "sk-or-v1-...b780"
         proxy-url: "socks5://proxy.example.com:1080" # 可选:针对该密钥的代理设置
       - api-key: "sk-or-v1-...b781" # 不进行额外代理设置
-    # 旧格式(仍支持，但无法为每个密钥指定代理):
-    # api-keys:
-    #   - "sk-or-v1-...b780"
-    #   - "sk-or-v1-...b781"
+    # 兼容说明：旧字段 api-keys 会在加载时自动迁移为 api-key-entries，并在保存时移除。
     models: # 提供商支持的模型。或者你可以使用类似 openrouter://moonshotai/kimi-k2:free 这样的格式来请求未在这里定义的模型
       - name: "moonshotai/kimi-k2:free" # 实际的模型名称。
         alias: "kimi-k2" # 在API中使用的别名。

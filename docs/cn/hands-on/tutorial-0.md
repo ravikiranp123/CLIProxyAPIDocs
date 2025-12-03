@@ -83,17 +83,10 @@ api-keys:
 # AIStudio的鉴权开关，设置为true，会使用上述的api-keys对AIStudio Build APP接入进行鉴权
 ws-auth: false
 
-# Gemini的官方API Key，如果你已经配了Gemini CLI，那么不建议填
-# 因为Gemini CLI是满血的，而官方Key是残血的，填了的话会一起参与轮询
-# 目前该配置已经弃用，请使用gemini-api-key，该配置保留为了兼容旧配置文件
-generative-language-api-key:
-  - "AIzaSy...01"
-  - "AIzaSy...02"
-
-# Gemini的官方API Key设置项，用于替代上边的generative-language-api-key
-# 不设置base-url时，使用官方端点接入，设置了base-url，可以接入第三方中转
-# 使用Cloudflare AI Gateway接入时，可以通过设置headers进行鉴权
-# 针对每个Key，还能够设置proxy-url，通过代理进行连接
+# Gemini 的官方 API Key 设置项。旧的 generative-language-api-key 会在加载时自动迁移为此字段并从配置文件移除。
+# 不设置base-url时，使用官方端点接入；设置了base-url，可以接入第三方中转。
+# 使用Cloudflare AI Gateway接入时，可以通过设置headers进行鉴权。
+# 针对每个Key，还能够设置proxy-url，通过代理进行连接。
 gemini-api-key:
   - api-key: "AIzaSy...01"
     base-url: "https://generativelanguage.googleapis.com"
@@ -126,10 +119,7 @@ claude-api-key:
 openai-compatibility:
   - name: "openrouter"
     base-url: "https://openrouter.ai/api/v1"
-    # api-keys的配置已弃用，请使用api-key-entries，保留是为了兼容旧配置文件
-    api-keys:
-      - "sk-or-v1-...b780"
-      - "sk-or-v1-...b781"
+    # 旧字段 api-keys 会在加载时自动迁移为 api-key-entries。
     api-key-entries:
       - api-key: "sk-or-v1-...b780"
         proxy-url: "socks5://proxy.example.com:1080"

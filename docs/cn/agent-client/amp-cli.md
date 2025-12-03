@@ -96,17 +96,20 @@ Amp 集成以模块化路由模块（`internal/api/modules/amp/`）实现，包�
 
 ### 基础配置
 
-在 `config.yaml` 中新增以下字段：
+在 `config.yaml` 中新增 `ampcode` 块（v6.5.37 起统一放在该节点，旧的 `amp-upstream-*` 字段会在启动时自动迁移并写回新结构）：
 
 ```yaml
-# Amp 上游控制平面（管理路由必需）
-amp-upstream-url: "https://ampcode.com"
-
-# 可选：覆盖 API key（否则使用环境变量或文件）
-# amp-upstream-api-key: "your-amp-api-key"
-
-# 安全性：将管理路由限制为 localhost（推荐）
-amp-restrict-management-to-localhost: true
+ampcode:
+  # Amp 上游控制平面（管理路由必需）
+  upstream-url: "https://ampcode.com"
+  # 可选：覆盖 API key（否则使用环境变量或文件）
+  # upstream-api-key: "your-amp-api-key"
+  # 安全性：将管理路由限制为 localhost（推荐）
+  restrict-management-to-localhost: true
+  # 可选：在本地不存在目标模型时的回退映射
+  # model-mappings:
+  #   - from: "claude-opus-4.5"
+  #     to: "claude-sonnet-4"
 ```
 
 ### 密钥解析优先级
@@ -115,7 +118,7 @@ Amp 模块以如下优先级解析 API key：
 
 | 来源 | 键名 | 优先级 | 缓存 |
 |------|------|--------|------|
-| 配置文件 | `amp-upstream-api-key` | 高 | 无 |
+| 配置文件 | `ampcode.upstream-api-key` | 高 | 无 |
 | 环境变量 | `AMP_API_KEY` | 中 | 无 |
 | Amp 密钥文件 | `~/.local/share/amp/secrets.json` | 低 | 5 分钟 |
 
@@ -123,7 +126,7 @@ Amp 模块以如下优先级解析 API key：
 
 ### 安全设置
 
-**`amp-restrict-management-to-localhost`**（默认：`true`）
+**`ampcode.restrict-management-to-localhost`**（默认：`true`）
 
 启用后，管理路由（`/api/auth`、`/api/user`、`/api/threads` 等）只接受来自 localhost（127.0.0.1、::1）的连接，可防止：
 - 浏览器探测式攻击
@@ -144,7 +147,8 @@ Amp 模块以如下优先级解析 API key：
 
 1. **关闭 localhost 限制**：
    ```yaml
-   amp-restrict-management-to-localhost: false
+   ampcode:
+     restrict-management-to-localhost: false
    ```
 
 2. **使用替代安全措施**：
@@ -161,7 +165,7 @@ Amp 模块以如下优先级解析 API key：
    location /api/internal { deny all; }
    ```
 
-**重要**：只有在理解安全影响并已采取其他防护措施时，才关闭 `amp-restrict-management-to-localhost`。
+**重要**：只有在理解安全影响并已采取其他防护措施时，才关闭 `ampcode.restrict-management-to-localhost`。
 
 ## 设置
 
@@ -174,8 +178,9 @@ port: 8317
 auth-dir: "~/.cli-proxy-api"
 
 # Amp 集成
-amp-upstream-url: "https://ampcode.com"
-amp-restrict-management-to-localhost: true
+ampcode:
+  upstream-url: "https://ampcode.com"
+  restrict-management-to-localhost: true
 
 # 其他常规设置...
 debug: false
@@ -267,7 +272,7 @@ CLI 和 IDE 可同时使用该代理。
 
 #### 提供商别名（始终可用）
 
-这些路由即使未配置 `amp-upstream-url` 也可使用：
+这些路由即使未配置 `ampcode.upstream-url` 也可使用：
 
 - `/api/provider/openai/v1/chat/completions`
 - `/api/provider/openai/v1/responses`
@@ -276,7 +281,7 @@ CLI 和 IDE 可同时使用该代理。
 
 Amp CLI 会使用你在 CLIProxyAPI 中通过 OAuth 认证的模型来调用这些路由。
 
-#### 管理路由（需要 `amp-upstream-url`）
+#### 管理路由（需要 `ampcode.upstream-url`）
 
 这些路由会被代理到 ampcode.com：
 
@@ -325,7 +330,7 @@ curl http://localhost:8317/api/user
 | 症状 | 可能原因 | 解决方案 |
 |------|----------|----------|
 | `/api/provider/...` 返回 404 | 路径错误 | 确保路径准确：`/api/provider/{provider}/v1...` |
-| `/api/user` 返回 403 | 非 localhost 请求 | 在同一机器上访问，或关闭 `amp-restrict-management-to-localhost`（不推荐） |
+| `/api/user` 返回 403 | 非 localhost 请求 | 在同一机器上访问，或关闭 `ampcode.restrict-management-to-localhost`（不推荐） |
 | 提供商返回 401/403 | OAuth 缺失或过期 | 重新运行 `--codex-login` 或 `--claude-login` |
 | Amp gzip 错误 | 响应解压问题 | 更新到最新构建；自动解压应能处理 |
 | 模型未走代理 | Amp URL 设置错误 | 检查 `amp.url` 设置或 `AMP_URL` 环境变量 |
@@ -367,7 +372,7 @@ echo $AMP_URL
 
 ### 安全清单
 
-- ✅ 保持 `amp-restrict-management-to-localhost: true`（默认）
+- ✅ 保持 `ampcode.restrict-management-to-localhost: true`（默认）
 - ✅ 不要将代理暴露到公共网络（绑定到 localhost 或使用防火墙/VPN）
 - ✅ 使用 `amp login` 管理的 Amp 密钥文件（`~/.local/share/amp/secrets.json`）
 - ✅ 定期重新登录轮换 OAuth 令牌

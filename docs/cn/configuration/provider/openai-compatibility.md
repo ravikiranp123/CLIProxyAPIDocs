@@ -6,9 +6,10 @@
 
 - name：内部识别名
 - base-url：提供商基础地址
-- api-key-entries：API密钥条目列表，支持可选的每密钥代理配置（推荐）
-- api-keys：(已弃用) 简单的API密钥列表，不支持代理配置
+- api-key-entries：API密钥条目列表，支持可选的每密钥代理配置（推荐且为持久化格式）
 - models：将上游模型 `name` 映射为本地可用 `alias`
+
+> 兼容说明：旧字段 `api-keys` 会在加载时自动迁移为 `api-key-entries`，保存配置时会被移除；请直接使用 `api-key-entries`。
 
 支持每密钥代理配置的示例：
 

@@ -9,6 +9,13 @@
 | `remote-management.allow-remote`                     | boolean  | false              | 是否允许远程（非localhost）访问管理接口。为false时仅允许本地访问；本地访问同样需要管理密钥。                     |
 | `remote-management.secret-key`                       | string   | ""                 | 管理密钥。若配置为明文，启动时会自动进行bcrypt加密并写回配置文件。若为空，管理接口整体不可用（404）。                   |
 | `remote-management.disable-control-panel`            | boolean  | false              | 当为 true 时，不再下载 `management.html`，且 `/management.html` 会返回 404，从而禁用内置管理界面。 |
+| `ampcode`                                            | object   | {}                 | Amp CLI 集成的上游与安全配置块。旧的 `amp-upstream-*` 字段会在加载时自动迁移到此节点并写回新格式。                |
+| `ampcode.upstream-url`                               | string   | ""                 | Amp 控制平面地址。为空时仅注册本地提供商别名，不代理管理路由。                                              |
+| `ampcode.upstream-api-key`                           | string   | ""                 | 可选的 ampcode.com API Key 覆盖项，优先级最高。                                             |
+| `ampcode.restrict-management-to-localhost`           | boolean  | true               | 是否将 Amp 管理路由限制为仅允许 localhost 访问。                                                |
+| `ampcode.model-mappings`                             | object[] | []                 | Amp 模型回退映射，`from` 为 Amp 请求的模型，`to` 为本地可用模型。                                   |
+| `ampcode.model-mappings.*.from`                      | string   | ""                 | Amp CLI 请求的模型名。                                                               |
+| `ampcode.model-mappings.*.to`                        | string   | ""                 | 映射到的本地或代理可用模型名。                                                          |
 | `quota-exceeded`                                     | object   | {}                 | 用于处理配额超限的配置。                                                              |
 | `quota-exceeded.switch-project`                      | boolean  | true               | 当配额超限时，是否自动切换到另一个项目。                                                      |
 | `quota-exceeded.switch-preview-model`                | boolean  | true               | 当配额超限时，是否自动切换到预览模型。                                                       |
@@ -21,7 +28,7 @@
 | `gemini-api-key.*.base-url`                          | string   | ""                 | 可选的 Gemini API 端点覆盖地址。                                                    |
 | `gemini-api-key.*.headers`                           | object   | {}                 | 可选的额外 HTTP 头部，仅在访问覆盖后的 Gemini 端点时发送。                                      |
 | `gemini-api-key.*.proxy-url`                         | string   | ""                 | 可选的单独代理设置，会覆盖全局 `proxy-url`。                                              |
-| `generative-language-api-key`                        | string[] | []                 | （兼容别名）旧管理接口返回的纯密钥列表。通过该接口写入会更新 `gemini-api-key`。                          |
+| `generative-language-api-key`                        | string[] | []                 | （兼容别名）旧管理接口返回的纯密钥列表，加载时会自动合并到 `gemini-api-key` 并从配置文件中移除。                |
 | `codex-api-key`                                      | object   | {}                 | Codex API密钥列表。                                                            |
 | `codex-api-key.api-key`                              | string   | ""                 | Codex API密钥。                                                              |
 | `codex-api-key.base-url`                             | string   | ""                 | 自定义的Codex API端点                                                           |
@@ -33,10 +40,10 @@
 | `claude-api-key.models`                              | object[] | []                 | Model alias entries for this key.                                         |
 | `claude-api-key.models.*.name`                       | string   | ""                 | Upstream Claude model name invoked against the API.                       |
 | `claude-api-key.models.*.alias`                      | string   | ""                 | Client-facing alias that maps to the upstream model name.                 |
-| `openai-compatibility`                               | object[] | []                 | 上游OpenAI兼容提供商的配置（名称、基础URL、API密钥、模型）。                                      |
+| `openai-compatibility`                               | object[] | []                 | 上游OpenAI兼容提供商的配置（名称、基础URL、API密钥、模型），仅 `api-key-entries` 会被持久化。                |
 | `openai-compatibility.*.name`                        | string   | ""                 | 提供商的名称。它将被用于用户代理（User Agent）和其他地方。                                        |
 | `openai-compatibility.*.base-url`                    | string   | ""                 | 提供商的基础URL。                                                                |
-| `openai-compatibility.*.api-keys`                    | string[] | []                 | (已弃用) 提供商的API密钥。建议改用api-key-entries以获得每密钥代理支持。                            |
+| `openai-compatibility.*.api-keys`                    | string[] | []                 | （已弃用）读取时会自动迁移到 `api-key-entries` 并在保存时从配置文件移除。                            |
 | `openai-compatibility.*.api-key-entries`             | object[] | []                 | API密钥条目，支持可选的每密钥代理配置。优先于api-keys。                                         |
 | `openai-compatibility.*.api-key-entries.*.api-key`   | string   | ""                 | 该条目的API密钥。                                                                |
 | `openai-compatibility.*.api-key-entries.*.proxy-url` | string   | ""                 | 针对该API密钥的代理URL。会覆盖全局proxy-url设置。支持socks5/http/https协议。                    |
@@ -47,5 +54,3 @@
 
 > [!NOTE]
 > 当指定了 `claude-api-key.models` 时，只有提供了别名的模型才会被注册到模型注册表中（此行为与 OpenAI 的兼容模式一致），并且该凭证的默认 Claude 其他未定义模型将无法访问。
-
-
