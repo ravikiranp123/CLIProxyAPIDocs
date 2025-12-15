@@ -16,7 +16,7 @@ Amp CLI 集成为 Amp 的 API 模式添加了专用路由，同时保持与现�
 - **管理代理**：将 OAuth 和账号管理请求转发到 Amp 控制平面
 - **智能回退**：自动将未配置的模型路由到 ampcode.com
 - **密钥管理**：可配置优先级（配置 > 环境变量 > 文件），缓存 5 分钟
-- **安全优先**：管理路由默认限制为 localhost
+- **安全优先**：管理路由需要 API key 认证（可选限制为 localhost）
 - **自动 gzip 处理**：自动解压来自 Amp 上游的响应
 
 ### 你可以做什么
@@ -75,7 +75,9 @@ Amp CLI/IDE
   │
   └─ Management requests (/api/auth, /api/user, /api/threads, ...)
       ↓
-      ├─ Localhost check (security)
+      ├─ API key auth (security)
+      ↓
+      ├─ Optional localhost restriction
       ↓
       └─ Reverse proxy to ampcode.com
           ↓
@@ -104,8 +106,8 @@ ampcode:
   upstream-url: "https://ampcode.com"
   # 可选：覆盖 API key（否则使用环境变量或文件）
   # upstream-api-key: "your-amp-api-key"
-  # 安全性：将管理路由限制为 localhost（推荐）
-  restrict-management-to-localhost: true
+  # 可选：将管理路由限制为 localhost（默认：false）
+  restrict-management-to-localhost: false
   # 可选：在本地不存在目标模型时的回退映射
   # model-mappings:
   #   - from: "claude-opus-4.5"
@@ -126,7 +128,16 @@ Amp 模块以如下优先级解析 API key：
 
 ### 安全设置
 
-**`ampcode.restrict-management-to-localhost`**（默认：`true`）
+#### 管理路由的 API key 认证
+
+从该变更起，Amp 管理路由（`/api/auth`、`/api/user`、`/api/threads`、`/threads` 等）会使用 CLIProxyAPI 的标准 API key 认证中间件。
+
+- 如果你在 `config.yaml` 中配置了 `api-keys`（推荐），这些路由会要求请求携带有效的 API key（`Authorization: Bearer <key>` 或 `X-Api-Key: <key>`），否则返回 `401 Unauthorized`。
+- 代理在完成本地认证后会移除客户端的 `Authorization`/`X-Api-Key`，并使用 `ampcode.upstream-api-key`（或环境变量/密钥文件解析到的 Amp key）去访问上游 ampcode.com。
+
+#### `ampcode.restrict-management-to-localhost`
+
+**默认：`false`**
 
 启用后，管理路由（`/api/auth`、`/api/user`、`/api/threads` 等）只接受来自 localhost（127.0.0.1、::1）的连接，可防止：
 - 浏览器探测式攻击
@@ -145,17 +156,15 @@ Amp 模块以如下优先级解析 API key：
 
 若需要在反向代理（nginx、Caddy、Cloudflare Tunnel 等）后运行 CLIProxyAPI：
 
-1. **关闭 localhost 限制**：
+1. **保持 localhost 限制为关闭（默认）**：
    ```yaml
    ampcode:
      restrict-management-to-localhost: false
    ```
 
-2. **使用替代安全措施**：
-   - 防火墙规则限制管理路由访问
-   - 代理层认证（HTTP Basic Auth、OAuth）
-   - 网络隔离（VPN、Tailscale、Cloudflare Access）
-   - 将 CLIProxyAPI 仅绑定 `127.0.0.1`，并通过 SSH 隧道访问
+2. **确保启用 API key 认证**（推荐）：
+   - 在 `config.yaml` 中设置 `api-keys`，并让客户端携带该 key
+   - 结合防火墙/VPN/零信任访问控制进一步收敛暴露面
 
 3. **nginx 示例配置**（阻止外部访问管理路由）：
    ```nginx
@@ -165,7 +174,7 @@ Amp 模块以如下优先级解析 API key：
    location /api/internal { deny all; }
    ```
 
-**重要**：只有在理解安全影响并已采取其他防护措施时，才关闭 `ampcode.restrict-management-to-localhost`。
+**提示**：`ampcode.restrict-management-to-localhost` 是额外加固手段；在反向代理场景下通常保持为 `false`。
 
 ## 设置
 
@@ -180,7 +189,7 @@ auth-dir: "~/.cli-proxy-api"
 # Amp 集成
 ampcode:
   upstream-url: "https://ampcode.com"
-  restrict-management-to-localhost: true
+  restrict-management-to-localhost: false
 
 # 其他常规设置...
 debug: false
@@ -292,7 +301,7 @@ Amp CLI 会使用你在 CLIProxyAPI 中通过 OAuth 认证的模型来调用这�
 - `/api/telemetry` - 使用遥测
 - `/api/internal` - 内部 API
 
-**安全性**：默认限制为 localhost。
+**安全性**：需要 API key；`ampcode.restrict-management-to-localhost` 可选开启（默认：false）。
 
 ### 模型回退行为
 
@@ -311,6 +320,7 @@ Amp CLI 会使用你在 CLIProxyAPI 中通过 OAuth 认证的模型来调用这�
 **使用本地 OAuth 的聊天补全：**
 ```bash
 curl http://localhost:8317/api/provider/openai/v1/chat/completions \
+  -H "Authorization: Bearer <your-cli-proxy-api-key>" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gpt-5",
@@ -318,9 +328,10 @@ curl http://localhost:8317/api/provider/openai/v1/chat/completions \
   }'
 ```
 
-**管理端点（仅限 localhost）：**
+**管理端点（需要 API key）：**
 ```bash
-curl http://localhost:8317/api/user
+curl http://localhost:8317/api/user \
+  -H "Authorization: Bearer <your-cli-proxy-api-key>"
 ```
 
 ## 故障排查
@@ -330,7 +341,8 @@ curl http://localhost:8317/api/user
 | 症状 | 可能原因 | 解决方案 |
 |------|----------|----------|
 | `/api/provider/...` 返回 404 | 路径错误 | 确保路径准确：`/api/provider/{provider}/v1...` |
-| `/api/user` 返回 403 | 非 localhost 请求 | 在同一机器上访问，或关闭 `ampcode.restrict-management-to-localhost`（不推荐） |
+| `/api/user` 返回 401 | 缺少/无效 API key | 配置 `api-keys`，并在请求中携带 `Authorization: Bearer <key>` 或 `X-Api-Key: <key>` |
+| `/api/user` 返回 403 | 开启了 localhost 限制且非本机访问 | 在同一机器上访问，或将 `ampcode.restrict-management-to-localhost` 设为 `false` |
 | 提供商返回 401/403 | OAuth 缺失或过期 | 重新运行 `--codex-login` 或 `--claude-login` |
 | Amp gzip 错误 | 响应解压问题 | 更新到最新构建；自动解压应能处理 |
 | 模型未走代理 | Amp URL 设置错误 | 检查 `amp.url` 设置或 `AMP_URL` 环境变量 |
@@ -372,7 +384,8 @@ echo $AMP_URL
 
 ### 安全清单
 
-- ✅ 保持 `ampcode.restrict-management-to-localhost: true`（默认）
+- ✅ 配置 `api-keys` 并妥善保管（管理路由需要 API key）
+- ✅ 需要额外加固时可启用 `ampcode.restrict-management-to-localhost: true`（默认：false）
 - ✅ 不要将代理暴露到公共网络（绑定到 localhost 或使用防火墙/VPN）
 - ✅ 使用 `amp login` 管理的 Amp 密钥文件（`~/.local/share/amp/secrets.json`）
 - ✅ 定期重新登录轮换 OAuth 令牌
