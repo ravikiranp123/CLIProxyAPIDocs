@@ -97,6 +97,7 @@ export default defineConfig({
                     {text: 'Cloud Deployment (Object Storage)', link: '/hands-on/tutorial-9'},
                     {text: 'Cloud Deployment (Git Storage)', link: '/hands-on/tutorial-10'},
                     {text: 'Zero-Cost Deployment (AIStudio Reverse Proxy)', link: '/hands-on/tutorial-11'},
+                    {text: 'AmpCode Usage Guide', link: '/hands-on/tutorial-12'},
                 ]
             },
         ],
