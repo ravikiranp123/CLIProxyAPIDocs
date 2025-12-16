@@ -4,33 +4,32 @@ outline: 'deep'
 
 # Amp CLI
 
-本指南讲解了如何将 CLIProxyAPI 与 Amp CLI 及 Amp IDE 扩展结合使用。此设置让你能够通过自己的提供商账户（如 Google、ChatGPT Plus 或 Claude Pro）来路由 Amp 的 AI 模型请求，同时使用 API 密钥安全地连接到 Amp 后端进行账户管理。
+本指南介绍如何将 CLIProxyAPI 与 Amp CLI 及 Amp IDE 扩展配合使用，让你能够通过 OAuth 在 Amp CLI 中使用现有的 Google/ChatGPT/Claude 订阅。
 
 ## 概述
 
-Amp CLI 集成为 Amp 的 API 模式添加了专用路由，同时保持与所有现有 CLIProxyAPI 功能的完全兼容。这使你可以在同一个代理服务器上同时使用传统的 CLIProxyAPI 功能和 Amp CLI。
+Amp CLI 集成通过增加专用路由来支持 Amp 的 API 调用模式，同时仍与现有 CLIProxyAPI 功能保持完全兼容。因此，你可以在同一台代理服务器上同时使用传统的 CLIProxyAPI 功能和 Amp CLI。
 
 ### 主要特性
 
-- **提供商路由别名**：将 Amp 的 `/api/provider/{provider}/v1...` 模式映射到 CLIProxyAPI 的处理器
-- **管理代理**：使用安全的上游 API 密钥将账户管理请求转发到 Amp 的控制平面
-- **智能回退**：自动将未配置的模型路由到 ampcode.com
-- **密钥管理**：可配置的优先级（配置 > 环境变量 > 文件），带有 5 分钟缓存
-- **安全优先**：管理路由需要 API 密钥认证（可选的 localhost 限制）
-- **自动 gzip 处理**：解压来自 Amp 上游的响应
+- **提供商路由别名**：将 Amp 的 `/api/provider/{provider}/v1...` 路径模式映射到 CLIProxyAPI 的处理程序。
+- **管理代理**：通过安全的上游 API 密钥，将账户管理请求转发到 Amp 控制平面。
+- **智能回退**：自动将未配置的模型路由到 ampcode.com。
+- **安全优先**：管理路由需要 API 密钥认证（可选：限制到 localhost）。
+- **自动处理 gzip**：自动解压来自 Amp 上游的响应。
 
 ### 你可以做什么
 
-- 将 Amp CLI 与你的 Google 账户一起使用（Gemini 3 Pro Preview、Gemini 2.5 Pro、Gemini 2.5 Flash）
-- 将 Amp CLI 与你的 ChatGPT Plus/Pro 订阅一起使用（GPT-5、GPT-5 Codex 模型）
-- 将 Amp CLI 与你的 Claude Pro/Max 订阅一起使用（Claude Sonnet 4.5、Opus 4.1）
-- 将 Amp IDE 扩展（VS Code、Cursor、Windsurf 等）与同一个代理一起使用
-- 通过一个代理服务器运行多个 CLI 工具（Factory + Amp）
+- 将 Amp CLI 与你的 Google 账户配合使用（Gemini 3 Pro Preview、Gemini 2.5 Pro、Gemini 2.5 Flash）
+- 将 Amp CLI 与你的 ChatGPT Plus/Pro 订阅配合使用（GPT-5、GPT-5 Codex 模型）
+- 将 Amp CLI 与你的 Claude Pro/Max 订阅配合使用（Claude Sonnet 4.5、Opus 4.1）
+- 将 Amp IDE 扩展（VS Code、Cursor、Windsurf 等）与同一个代理配合使用
+- 在同一个代理服务器下运行多个 CLI 工具（Factory + Amp）
 - 自动将未配置的模型路由到 ampcode.com
 
-### 你应该认证哪些提供商？
+### 你应该对哪些提供商进行 OAuth 登录？
 
-**重要提示**：你需要认证的提供商取决于你安装的 Amp 版本当前使用的模型和功能。Amp 为各种代理模式和专门的子代理使用不同的提供商：
+**重要提示**：你需要对哪些提供商进行 OAuth 登录，取决于你安装的 Amp 版本当前使用的模型和功能。Amp 会为不同的代理模式和专用子代理使用不同的提供商：
 
 - **Smart 模式**：使用 Google/Gemini 模型（Gemini 3 Pro）
 - **Rush 模式**：使用 Anthropic/Claude 模型（Claude Haiku 4.5）
@@ -43,20 +42,20 @@ Amp CLI 集成为 Amp 的 API 模式添加了专用路由，同时保持与所�
 
 #### 回退行为
 
-CLIProxyAPI 使用一个智能回退系统：
+CLIProxyAPI 采用智能回退机制：
 
-1. **提供商在本地已认证** (`--login`, `--codex-login`, `--claude-login`):
-   - 请求使用**你的 OAuth 订阅**（ChatGPT Plus/Pro、Claude Pro/Max、Google 账户）
-   - 你可以受益于订阅中包含的使用配额
+1. **已在本地完成该提供商的 OAuth 登录**（`--login`、`--codex-login`、`--claude-login`）：
+   - 请求会使用**你的 OAuth 订阅**（ChatGPT Plus/Pro、Claude Pro/Max、Google 账户）
+   - 你可以使用订阅自带的用量配额
    - 不消耗 Amp 点数
 
-2. **提供商在本地未认证**:
-   - 请求自动转发到 **ampcode.com**
-   - 使用 Amp 的后端提供商连接
-   - 如果提供商是付费的（OpenAI、Anthropic 付费层级），则**需要 Amp 点数**
-   - 如果 Amp 点数余额不足，可能会导致错误
+2. **未在本地完成该提供商的 OAuth 登录**：
+   - 请求会自动转发到 **ampcode.com**
+   - 使用 Amp 后端的提供商连接
+   - 如果该提供商为付费服务（OpenAI、Anthropic 付费层级），则**需要 Amp 点数**
+   - 如果 Amp 点数余额不足，可能会导致报错
 
-**建议**：认证你拥有订阅的所有提供商，以最大化价值并最小化 Amp 点数的使用。如果你没有订阅 Amp 使用的所有提供商，请确保你有足够的 Amp 点数用于回退请求。
+**建议**：对你拥有订阅的所有提供商都进行 OAuth 登录，以最大化订阅价值并尽量减少 Amp 点数消耗。如果你未订阅 Amp 使用的全部提供商，请确保你有足够的 Amp 点数用于回退请求。
 
 ## 架构
 
@@ -67,9 +66,9 @@ Amp CLI/IDE
   ↓
   ├─ 提供商 API 请求 (/api/provider/{provider}/v1/...)
   │   ↓
-  │   ├─ 模型在本地配置了吗?
-  │   │   是 → 使用本地 OAuth 令牌 (OpenAI/Claude/Gemini 处理器)
-  │   │   否  → 转发到 ampcode.com (反向代理)
+  │   ├─ 模型在本地配置了吗？
+  │   │   是 → 使用本地 OAuth 令牌（OpenAI/Claude/Gemini 处理程序）
+  │   │   否 → 转发到 ampcode.com（反向代理）
   │   ↓
   │   响应
   │
@@ -77,28 +76,28 @@ Amp CLI/IDE
       ↓
       ├─ 使用 CLIProxyAPI 的 `api-keys` 进行认证
       ↓
-      ├─ 可选的 localhost 限制
+      ├─ 可选：限制为 localhost
       ↓
-      └─ 反向代理到 ampcode.com (使用 `upstream-api-key`)
+      └─ 反向代理到 ampcode.com（使用 `upstream-api-key`）
           ↓
-          响应 (如果是 gzipped 则自动解压)
+          响应（若为 gzip 压缩则自动解压）
 ```
 
 ### 组件
 
 Amp 集成是作为一个模块化的路由模块（`internal/api/modules/amp/`）实现的，包含以下组件：
 
-1. **路由别名** (`routes.go`): 将 Amp 风格的路径映射到标准处理器
-2. **反向代理** (`proxy.go`): 将管理请求转发到 ampcode.com
-3. **回退处理器** (`fallback_handlers.go`): 将未配置的模型路由到 ampcode.com
-4. **密钥管理** (`secret.go`): 带缓存的多源 API 密钥解析
-5. **主模块** (`amp.go`): 协调注册和配置
+1. **路由别名** (`routes.go`)：将 Amp 风格的路径映射到标准处理程序
+2. **反向代理** (`proxy.go`)：将管理请求转发到 ampcode.com
+3. **回退处理程序** (`fallback_handlers.go`)：将未配置的模型路由到 ampcode.com
+4. **密钥管理** (`secret.go`)：带缓存的多源 API 密钥解析
+5. **主模块** (`amp.go`)：协调注册和配置
 
 ## 配置
 
 ### 基础配置
 
-将 `ampcode` 块添加到你的 `config.yaml` 中（从 v6.5.37 开始，旧版的 `amp-upstream-*` 密钥会在加载时自动迁移并重写为该结构）：
+将 `ampcode` 块添加到你的 `config.yaml` 中（从 v6.5.37 开始，旧版的 `amp-upstream-*` 键会在加载时自动迁移并重写为该结构）：
 
 ```yaml
 # 供客户端（例如 Amp CLI、VS Code）向 CLIProxyAPI 认证的 API 密钥
@@ -123,21 +122,20 @@ ampcode:
 
 #### 管理路由的 API 密钥认证
 
-从 v6.6.15 版本开始，Amp 管理路由（`/api/auth`、`/api/user`、`/api/threads`、`/threads` 等）受到 CLIProxyAPI 标准 API 密钥认证中间件的保护。
+从 v6.6.15 版本开始，Amp 管理路由（`/api/auth`、`/api/user`、`/api/threads`、`/threads` 等）由 CLIProxyAPI 的标准 API 密钥认证中间件保护。
 
-- 如果你在 `config.yaml` 中配置了 `api-keys`（推荐做法），这些路由会要求请求中包含一个有效的 API 密钥（`Authorization: Bearer <key>` 或 `X-Api-Key: <key>`），否则将返回 `401 Unauthorized`。
-- 本地认证成功后，代理会剥离客户端的 `Authorization`/`X-Api-Key`，并使用 `ampcode.upstream-api-key` 来调用上游的 ampcode.com 服务。
+- 如果你在 `config.yaml` 中配置了 `api-keys`（推荐），这些路由要求请求携带有效的 API 密钥（`Authorization: Bearer <key>` 或 `X-Api-Key: <key>`），否则返回 `401 Unauthorized`。
+- 本地认证成功后，代理会移除客户端的 `Authorization`/`X-Api-Key`，并使用 `ampcode.upstream-api-key` 调用上游的 ampcode.com 服务。
 
 #### `ampcode.restrict-management-to-localhost`
 
 **默认值：`false`**
 
-启用后，管理路由（`/api/auth`、`/api/user`、`/api/threads` 等）只接受来自 localhost (127.0.0.1, ::1) 的连接。这可以防止：
-
-- 路过式浏览器攻击
+启用后，管理路由（`/api/auth`、`/api/user`、`/api/threads` 等）只接受来自 localhost（127.0.0.1、::1）的连接。这可以防止：
+- 浏览器“路过式”攻击（Drive-by browser attacks）
 - 对管理端点的远程访问
 - 基于 CORS 的攻击
-- 头部欺骗攻击（例如 `X-Forwarded-For: 127.0.0.1`）
+- 请求头欺骗攻击（例如 `X-Forwarded-For: 127.0.0.1`）
 
 #### 工作原理
 
@@ -148,7 +146,7 @@ ampcode:
 
 #### 反向代理部署
 
-如果你需要在反向代理（nginx、Caddy、Cloudflare Tunnel 等）后面运行 CLIProxyAPI：
+如果你需要在反向代理（nginx, Caddy, Cloudflare Tunnel 等）后面运行 CLIProxyAPI：
 
 1. **保持 localhost 限制为禁用状态（默认）**：
    ```yaml
@@ -156,7 +154,7 @@ ampcode:
      restrict-management-to-localhost: false
    ```
 
-2. **确保 API 密钥认证已启用**（推荐）：
+2. **确保已启用 API 密钥认证**（推荐）：
    - 在 `config.yaml` 中配置 `api-keys`，并让客户端发送密钥
    - 结合防火墙/VPN/零信任控制来减少暴露面
 
@@ -174,7 +172,7 @@ ampcode:
 
 ### 1. 配置 CLIProxyAPI
 
-创建或编辑 `config.yaml`。你将需要两种类型的 API 密钥：
+创建或编辑 `config.yaml`。你需要准备两类 API 密钥：
 1.  `api-keys`：供像 Amp CLI 这样的客户端连接到你的 CLIProxyAPI 实例。
 2.  `ampcode.upstream-api-key`：供 CLIProxyAPI 连接到 `ampcode.com` 后端。请从 **[https://ampcode.com/settings](https://ampcode.com/settings)** 获取。
 
@@ -198,9 +196,9 @@ debug: false
 logging-to-file: true
 ```
 
-### 2. 认证提供商
+### 2. 对提供商进行 OAuth 登录
 
-为你想使用的提供商运行 OAuth 登录：
+对你想使用的提供商进行 OAuth 登录：
 
 **Google 账户 (Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 3 Pro Preview):**
 ```bash
@@ -232,7 +230,7 @@ logging-to-file: true
 
 #### 选项 A：设置文件
 
-编辑 `~/.config/amp/settings.json`:
+编辑 `~/.config/amp/settings.json`：
 
 ```json
 {
@@ -281,17 +279,17 @@ CLI 和 IDE 可以同时使用该代理。
 - `/api/provider/anthropic/v1/messages`
 - `/api/provider/google/v1beta/models/:action`
 
-Amp CLI 使用你在 CLIProxyAPI 中配置的经 OAuth 认证的模型来调用这些路由。
+Amp CLI 调用这些路由时，会使用你在 CLIProxyAPI 中为对应提供商配置的 OAuth 令牌。
 
 #### 管理路由（需要 `ampcode.upstream-url`）
 
-这些路由被代理到 ampcode.com：
+这些路由会通过反向代理转发到 ampcode.com：
 
 - `/api/auth` - 认证
 - `/api/user` - 用户资料
 - `/api/meta` - 元数据
 - `/api/threads` - 对话线程
-- `/api/telemetry` - 使用遥测
+- `/api/telemetry` - 用量遥测
 - `/api/internal` - 内部 API
 
 **安全**：需要一个 API 密钥；`ampcode.restrict-management-to-localhost` 是可选的（默认：false）。
@@ -301,11 +299,11 @@ Amp CLI 使用你在 CLIProxyAPI 中配置的经 OAuth 认证的模型来调用�
 当 Amp 请求一个模型时：
 
 1. **检查本地配置**：CLIProxyAPI 是否有该模型提供商的 OAuth 令牌？
-2. **如果有**：路由到本地处理器（使用你的 OAuth 订阅）
+2. **如果有**：路由到本地处理程序（使用你的 OAuth 订阅）
 3. **如果没有**：转发到 ampcode.com（使用 Amp 的默认路由）
 
 这实现了无缝的混合使用：
-- 你已配置的模型（Gemini、ChatGPT、Claude）→ 你的 OAuth 订阅
+- 你已配置的模型（Gemini, ChatGPT, Claude）→ 你的 OAuth 订阅
 - 你未配置的模型 → Amp 的默认提供商
 
 ### API 调用示例
@@ -333,12 +331,12 @@ curl http://localhost:8317/api/user \
 
 | 症状 | 可能的原因 | 解决方法 |
 |---|---|---|
-| `/api/provider/...` 404 | 路由路径不正确 | 确保路径完全匹配: `/api/provider/{provider}/v1...` |
+| `/api/provider/...` 404 | 路由路径不正确 | 确保路径完全匹配：`/api/provider/{provider}/v1...` |
 | `/api/user` 401 | 缺少/无效的 API 密钥 | 配置 `api-keys` 并发送 `Authorization: Bearer <key>` 或 `X-Api-Key: <key>` |
-| `/api/user` 403 | 启用了 localhost 限制且请求是远程的 | 从同一台机器运行或将 `ampcode.restrict-management-to-localhost` 设置为 `false` |
+| `/api/user` 403 | 启用了 localhost 限制且请求来自远程 | 从同一台机器运行或将 `ampcode.restrict-management-to-localhost` 设置为 `false` |
 | 提供商返回 401/403 | 缺少/过期的 OAuth | 重新运行 `--codex-login` 或 `--claude-login` |
-| Amp gzip 错误 | 响应解压问题 | 更新到最新版本；自动解压应该能处理这个问题 |
-| 模型未使用代理 | Amp URL 错误 | 验证 `amp.url` 设置或 `AMP_URL` 环境变量 |
+| Amp gzip 错误 | 响应解压缩问题 | 更新到最新版本；自动解压应能处理此问题 |
+| 模型请求未走代理 | Amp URL 配置错误 | 检查 `amp.url` 设置或 `AMP_URL` 环境变量 |
 | CORS 错误 | 受保护的管理端点 | 使用 CLI/终端，而不是浏览器 |
 
 ### 诊断
@@ -357,12 +355,12 @@ tmux attach-session -t proxy
 debug: true
 ```
 
-**测试基本连接性：**
+**测试基础连通性：**
 ```bash
 # 检查代理是否正在运行
 curl http://localhost:8317/v1/models
 
-# 检查 Amp 特定路由
+# 检查 Amp 专用路由
 curl http://localhost:8317/api/provider/openai/v1/models
 ```
 
@@ -375,15 +373,15 @@ amp config get amp.url
 echo $AMP_URL
 ```
 
-### 安全清单
+### 安全检查清单
 
-- ✅ 配置并保护 `api-keys`（管理路由需要 API 密钥）
+- ✅ 配置并保护 `api-keys`（管理路由需要 API 密钥认证）
 - ✅ 在可能的情况下启用 `ampcode.restrict-management-to-localhost: true` 以进行额外加固（默认：false）
-- ✅ 不要公网暴露代理（绑定到 localhost 或使用防火墙/VPN）
-- ✅ 在配置文件中安全地存储你的 `ampcode.upstream-api-key`。
-- ✅ 通过重新运行登录命令定期轮换 OAuth 令牌
-- ✅ 如果处理敏感数据，将配置和 auth-dir 存储在加密磁盘上
-- ✅ 保持代理二进制文件为最新版本以获取安全修复
+- ✅ 不要将代理公网暴露（绑定到 localhost 或使用防火墙/VPN）
+- ✅ 在配置文件中安全地存储你的 `ampcode.upstream-api-key`
+- ✅ 定期重新运行登录命令以轮换 OAuth 令牌
+- ✅ 如果处理敏感数据，将配置文件和 `auth-dir` 存储在加密磁盘上
+- ✅ 保持代理二进制文件为最新版本，以获取安全修复
 
 ## 其他资源
 
