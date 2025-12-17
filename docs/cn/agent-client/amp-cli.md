@@ -230,12 +230,24 @@ logging-to-file: true
 
 #### 选项 A：设置文件
 
-编辑 `~/.config/amp/settings.json`：
+Amp CLI 使用两个配置文件：
+
+1. **设置文件**：`~/.config/amp/settings.json` - 通用设置
+2. **密钥文件**：`~/.local/share/amp/secrets.json` - 敏感凭证（API 密钥）
+
+编辑 `~/.config/amp/settings.json` 配置 URL：
 
 ```json
 {
-  "amp.url": "http://localhost:8317",
-  "amp.apiKey": "your-client-secret-key"
+  "amp.url": "http://localhost:8317"
+}
+```
+
+编辑 `~/.local/share/amp/secrets.json` 配置 API 密钥：
+
+```json
+{
+  "apiKey@http://localhost:8317": "your-client-secret-key"
 }
 ```
 
