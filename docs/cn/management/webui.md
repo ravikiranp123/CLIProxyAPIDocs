@@ -4,7 +4,7 @@
 
 一个官方的基于Web的CLIProxyAPI管理界面。
 
-基础路径：`http://localhost:8317/management`
+基础路径：`http://localhost:8317/management.html`
 
 设置 `remote-management.disable-control-panel` 为 `true` 时，服务器将跳过下载 `management.html`，且 `/management.html` 会返回 404，从而禁用内置管理界面。
 
