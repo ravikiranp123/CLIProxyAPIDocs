@@ -73,13 +73,16 @@ outline: 'deep'
                   "details": [
                     {
                       "timestamp": "2024-05-20T09:15:04.123456Z",
+                      "source": "openai",
+                      "auth_index": "a1b2c3d4e5f67890",
                       "tokens": {
                         "input_tokens": 523,
                         "output_tokens": 308,
                         "reasoning_tokens": 0,
                         "cached_tokens": 0,
                         "total_tokens": 831
-                      }
+                      },
+                      "failed": false
                     }
                   ]
                 }
@@ -94,6 +97,49 @@ outline: 'deep'
         - 仅统计带有 token 使用信息的请求，服务重启后数据会被清空。
         - 小时维度会将所有日期折叠到 `00`–`23` 的统一小时桶中。
         - 顶层字段 `failed_requests` 与 `usage.failure_count` 相同，便于轮询。
+- GET `/usage/export` — 导出完整的请求统计快照（用于备份/迁移）
+    - 响应：
+      ```json
+      {
+        "version": 1,
+        "exported_at": "2025-12-26T03:49:51Z",
+        "usage": {
+          "total_requests": 24,
+          "success_count": 22,
+          "failure_count": 2,
+          "total_tokens": 13890,
+          "requests_by_day": {},
+          "requests_by_hour": {},
+          "tokens_by_day": {},
+          "tokens_by_hour": {},
+          "apis": {}
+        }
+      }
+      ```
+    - 说明：
+        - `exported_at` 为 UTC 时间（RFC 3339）。
+        - `usage` 的结构与 `GET /usage` 返回的 `usage` 字段一致。
+- POST `/usage/import` — 导入并合并请求统计快照到内存（自动去重）
+    - 请求：
+      ```bash
+      curl -X POST -H 'Content-Type: application/json' \
+      -H 'Authorization: Bearer <MANAGEMENT_KEY>' \
+        --data-binary @usage-export.json \
+        http://localhost:8317/v0/management/usage/import
+      ```
+    - 响应：
+      ```json
+      {
+        "added": 10,
+        "skipped": 2,
+        "total_requests": 123,
+        "failed_requests": 4
+      }
+      ```
+    - 说明：
+        - 该接口为“合并”而非覆盖；重复请求明细会被跳过并计入 `skipped`。
+        - 可直接使用 `GET /usage/export` 的响应 JSON 作为请求体（其中 `exported_at` 会被忽略）。
+        - `version` 当前支持 `1`（也接受省略/`0` 作为兼容）。
 
 ### Config
 - GET `/config` — 获取完整的配置
